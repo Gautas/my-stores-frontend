@@ -2,7 +2,7 @@ services:
   - type: web
     name: my-stores-web
     runtime: static
-    buildCommand: npm install && node -e "require('fs').writeFileSync('src/api-config.ts', 'export const API_URL = '+JSON.stringify(process.env.API_URL || 'http://localhost:8080/api')+';')" && npm run build
+    buildCommand: npm install && node -e "require('fs').writeFileSync('src/api-config.ts', 'export const API_URL = '+JSON.stringify(process.env.API_URL || 'https://my-stores-backend.onrender.com/api')+';')" && npm run build
     staticPublishPath: dist/my-stores/browser
     envVars:
       - key: API_URL
