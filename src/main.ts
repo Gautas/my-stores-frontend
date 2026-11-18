@@ -14,6 +14,7 @@ type Product={id:number;name:string;description:string;price:number;stock:number
   constructor(private http:HttpClient){}
   headers(){return new HttpHeaders({'X-Session-Token':this.token});}
   get<T>(path:string){return firstValueFrom(this.http.get<T>(API+path));}
+  getAuth<T>(path:string){return firstValueFrom(this.http.get<T>(API+path,{headers:this.headers()}));}
   post<T>(path:string,body:any){return firstValueFrom(this.http.post<T>(API+path,body,{headers:this.headers()}));}
   put<T>(path:string,body:any){return firstValueFrom(this.http.put<T>(API+path,body,{headers:this.headers()}));}
   delete(path:string){return firstValueFrom(this.http.delete(API+path,{headers:this.headers()}));}
@@ -52,11 +53,11 @@ class App implements OnInit {
  newProduct(){this.productForm={name:'',description:'',price:0,stock:0,imageUrl:'',storeId:this.stores[0]?.id||0};this.editingProduct=true;}
  editProduct(p:Product){this.productForm={...p};this.editingProduct=true;}
  async saveProduct(){try{const {id,...body}=this.productForm;await (id?this.data.put('/seller/products/'+id,body):this.data.post('/seller/products',body));this.editingProduct=false;await this.loadProducts();this.error='';}catch{this.error='Product save failed. Check required fields and login.';}}
- async removeProduct(p:Product){if(confirm('Delete '+p.name+'?')){await this.data.delete('/seller/products/'+p.id);await this.loadProducts();}}
+ async removeProduct(p:Product){if(confirm('Delete '+p.name+'?')){try{await this.data.delete('/seller/products/'+p.id);await this.loadProducts();this.error='';}catch{this.error='Product delete failed. Please sign in again and retry.';}}}
  editStore(s:Store){this.storeForm={...s};}
  async saveStore(){try{const {id,...body}=this.storeForm;await (id?this.data.put('/seller/stores/'+id,body):this.data.post('/seller/stores',body));this.storeForm={name:'',location:'',description:''};await this.loadStores();}catch{this.error='Store save failed.';}}
- async removeStore(s:Store){if(confirm('Delete '+s.name+'?')){await this.data.delete('/seller/stores/'+s.id);await this.loadStores();}}
- async loadOrders(){try{this.orders=await this.data.get<any[]>('/orders/mine');}catch{}}
+ async removeStore(s:Store){if(confirm('Delete '+s.name+'?')){try{await this.data.delete('/seller/stores/'+s.id);await this.loadStores();await this.loadProducts();this.error='';}catch{this.error='Store delete failed. Please sign in again and retry.';}}}
+ async loadOrders(){try{this.orders=await this.data.getAuth<any[]>('/orders/mine');this.error='';}catch{this.notice='Could not load orders. Please sign in again.';}}
  async ask(){if(!this.question.trim())return;try{const r=await this.data.post<any>('/ai/ask',{question:this.question});this.answer=r.answer;}catch{this.answer='Assistant is unavailable right now.';}}
 }
 bootstrapApplication(App,{providers:[provideHttpClient()]}).catch(console.error);
